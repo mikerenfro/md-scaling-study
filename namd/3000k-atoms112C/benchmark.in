@@ -1,0 +1,111 @@
+# Her1-Her1
+
+set restart T
+set restraint F
+
+set p         1.0
+set T         300.0
+set num_steps 10000
+
+# CHARMM force field
+structure         benchmark.psf      # must be in X-PLOR format!
+paratypecharmm    on
+parameters        par_all27_prot_lipid.prm
+coordinates       benchmark.pdb
+exclude           scaled1-4
+1-4scaling        1.0
+
+# use restraints for setup
+if { $restraint == "T" } {
+  constraints       on
+  consexp           2
+  consref           benchmark.pdb
+  conskfile         benchmark.pdb
+  conskcol          B
+}
+
+# restart options
+if { $restart == "T" } {
+  binvelocities       benchmark.vel
+  bincoordinates      benchmark.coor
+  ExtendedSystem      benchmark.xsc
+  firsttimestep       0
+} else {
+  temperature   $T
+}
+
+# temperature coupling
+langevin             on
+langevinHydrogen     on
+langevinTemp         $T
+langevinDamping      1
+
+# pressure coupling
+useGroupPressure     yes
+
+LangevinPiston       on
+LangevinPistonTarget $p 
+LangevinPistonPeriod 200
+LangevinPistonDecay  100
+LangevinPistonTemp   $T
+
+useFlexibleCell      yes
+useConstantArea      yes
+
+# output
+outputname         benchmark
+outputEnergies     5000
+outputPressure     5000
+outputTiming       5000
+binaryoutput       yes
+
+# write restart
+restartname        benchmark
+restartfreq        1000
+binaryrestart      yes
+
+# trajectory file
+DCDfile            benchmark.dcd
+DCDUnitCell        yes
+DCDfreq            5000
+
+# eXtended System Trajectory
+XSTfile            benchmark.xst
+XSTfreq            5000
+
+# wrap coordinates
+wrapAll            on
+wrapNearest        on
+
+# multipe time step settings
+nonbondedFreq      1
+fullElectFrequency 1
+
+# rigid bonds
+useSettle          on
+rigidBonds         all
+rigidIterations    100
+
+# cutoffs and non-bonded pair lists
+switchdist         10
+cutoff             12
+switching          on
+pairlistdist       14
+pairlistsPerCycle  1
+pairlistMinProcs   128
+stepspercycle      20
+
+# particle mesh ewald
+PME                on
+PMEGridSpacing     1.0
+
+# cell bassis vectors are read from restart file
+if { $restart != "T" } {
+  cellBasisVector1   194 0   0
+  cellBasisVector2   0   149 0
+  cellBasisVector3   0   0   157
+}
+
+timestep 2.0 # in fs
+
+run $num_steps

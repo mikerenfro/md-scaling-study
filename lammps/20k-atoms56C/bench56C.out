@@ -1,0 +1,160 @@
+LAMMPS (31 Mar 2017)
+variable        T equal 300.0
+variable        p equal   1.0
+variable        Tdamp equal  100.0
+variable        pdamp equal 1000.0
+variable	new string "20k_infiniband_gpu"
+
+units           real
+neigh_modify    delay 0 every 1 check yes
+
+atom_style      full
+bond_style      harmonic
+angle_style     charmm
+dihedral_style  charmm
+improper_style  harmonic
+
+pair_style      lj/charmm/coul/long 10 12
+pair_modify     mix arithmetic
+kspace_style    pppm 1e-4
+
+read_data       benchmark.data
+  orthogonal box = (-29.7267 -27.2901 -29.7267) to (29.7267 27.2901 29.7267)
+  4 by 2 by 7 MPI processor grid
+  reading atoms ...
+  19605 atoms
+  reading velocities ...
+  19605 velocities
+  scanning bonds ...
+  4 = max bonds/atom
+  scanning angles ...
+  6 = max angles/atom
+  scanning dihedrals ...
+  18 = max dihedrals/atom
+  scanning impropers ...
+  2 = max impropers/atom
+  reading bonds ...
+  13294 bonds
+  reading angles ...
+  7504 angles
+  reading dihedrals ...
+  1866 dihedrals
+  reading impropers ...
+  102 impropers
+  4 = max # of 1-2 neighbors
+  9 = max # of 1-3 neighbors
+  19 = max # of 1-4 neighbors
+  21 = max # of special neighbors
+
+special_bonds   charmm
+fix             1 all shake 1.0e-6 500 0 m 1.0 b 47 a 106
+  121 = # of size 2 clusters
+  55 = # of size 3 clusters
+  28 = # of size 4 clusters
+  6321 = # of frozen angles
+fix             2 all npt temp $T $T ${Tdamp} iso $p $p ${pdamp}
+fix             2 all npt temp 300 $T ${Tdamp} iso $p $p ${pdamp}
+fix             2 all npt temp 300 300 ${Tdamp} iso $p $p ${pdamp}
+fix             2 all npt temp 300 300 100 iso $p $p ${pdamp}
+fix             2 all npt temp 300 300 100 iso 1 $p ${pdamp}
+fix             2 all npt temp 300 300 100 iso 1 1 ${pdamp}
+fix             2 all npt temp 300 300 100 iso 1 1 1000
+
+thermo          10000
+thermo_style    multi
+thermo_modify   flush yes
+timestep        2.0
+
+restart         10000 benchmark.rst
+dump            1 all dcd 25000 benchmark.dcd
+dump_modify     1 unwrap yes
+
+run             50000
+PPPM initialization ...
+WARNING: Using 12-bit tables for long-range coulomb (../kspace.cpp:321)
+  G vector (1/distance) = 0.216778
+  grid = 24 24 24
+  stencil order = 5
+  estimated absolute RMS force accuracy = 0.0337844
+  estimated relative force accuracy = 0.000101741
+  using double precision FFTs
+  3d grid and FFT values/proc = 1870 288
+Neighbor list info ...
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 14
+  ghost atom cutoff = 14
+  binsize = 7, bins = 9 8 9
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/charmm/coul/long, perpetual
+      attributes: half, newton on
+      pair build: half/bin/newton
+      stencil: half/bin/3d/newton
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 17.65 | 18.02 | 18.6 Mbytes
+---------------- Step        0 ----- CPU =      0.0000 (sec) ----------------
+TotEng   =    -50353.2942 KinEng   =     11904.6045 Temp     =       303.0618 
+PotEng   =    -62257.8987 E_bond   =       122.4502 E_angle  =       370.9654 
+E_dihed  =       255.9852 E_impro  =        24.6181 E_vdwl   =      6435.1015 
+E_coul   =    200806.0396 E_long   =   -270273.0588 Press    =       245.0164 
+Volume   =    192924.4262 
+---------------- Step    10000 ----- CPU =    109.8948 (sec) ----------------
+TotEng   =    -50784.9669 KinEng   =     11668.9888 Temp     =       297.0636 
+PotEng   =    -62453.9557 E_bond   =       141.3517 E_angle  =       368.7926 
+E_dihed  =       239.5859 E_impro  =        25.3437 E_vdwl   =      6397.5459 
+E_coul   =    200645.6773 E_long   =   -270272.2527 Press    =        21.5340 
+Volume   =    192717.9017 
+---------------- Step    20000 ----- CPU =    218.9432 (sec) ----------------
+TotEng   =    -50714.3172 KinEng   =     11623.6327 Temp     =       295.9089 
+PotEng   =    -62337.9499 E_bond   =       128.3108 E_angle  =       384.2863 
+E_dihed  =       237.7541 E_impro  =        16.5159 E_vdwl   =      6240.7387 
+E_coul   =    200923.2598 E_long   =   -270268.8156 Press    =      -236.1411 
+Volume   =    194130.8164 
+---------------- Step    30000 ----- CPU =    328.7531 (sec) ----------------
+TotEng   =    -50606.8693 KinEng   =     11887.1498 Temp     =       302.6174 
+PotEng   =    -62494.0192 E_bond   =       132.1133 E_angle  =       388.7070 
+E_dihed  =       243.2627 E_impro  =        20.6712 E_vdwl   =      6473.5953 
+E_coul   =    200510.2476 E_long   =   -270262.6163 Press    =       195.8255 
+Volume   =    191710.9745 
+---------------- Step    40000 ----- CPU =    437.9593 (sec) ----------------
+TotEng   =    -50577.8835 KinEng   =     11792.3300 Temp     =       300.2035 
+PotEng   =    -62370.2135 E_bond   =       130.5093 E_angle  =       399.9727 
+E_dihed  =       243.4281 E_impro  =        23.4230 E_vdwl   =      6412.1064 
+E_coul   =    200688.5504 E_long   =   -270268.2034 Press    =       151.8876 
+Volume   =    192505.6389 
+---------------- Step    50000 ----- CPU =    546.3261 (sec) ----------------
+TotEng   =    -50373.6465 KinEng   =     11877.3466 Temp     =       302.3679 
+PotEng   =    -62250.9931 E_bond   =       148.1324 E_angle  =       368.3632 
+E_dihed  =       252.0924 E_impro  =        24.9461 E_vdwl   =      6395.3948 
+E_coul   =    200831.1653 E_long   =   -270271.0874 Press    =       171.6420 
+Volume   =    192831.7043 
+Loop time of 546.327 on 56 procs for 50000 steps with 19605 atoms
+
+Performance: 15.815 ns/day, 1.518 hours/ns, 91.520 timesteps/s
+99.7% CPU use with 56 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 223.21     | 244.96     | 275.87     |  66.7 | 44.84
+Bond    | 0.031107   | 0.37176    | 5.0169     | 158.6 |  0.07
+Kspace  | 96.712     | 137.44     | 165.36     | 114.7 | 25.16
+Neigh   | 44.418     | 45.733     | 47.396     |  15.5 |  8.37
+Comm    | 56.129     | 66.177     | 74.934     |  70.5 | 12.11
+Output  | 0.19701    | 0.19763    | 0.20044    |   0.1 |  0.04
+Modify  | 46.26      | 48.293     | 51.579     |  19.3 |  8.84
+Other   |            | 3.151      |            |       |  0.58
+
+Nlocal:    350.089 ave 378 max 321 min
+Histogram: 1 4 3 8 11 10 10 6 1 2
+Nghost:    8448.29 ave 8512 max 8366 min
+Histogram: 1 1 5 5 9 8 11 8 6 2
+Neighs:    204450 ave 229392 max 181506 min
+Histogram: 2 2 7 10 7 12 10 5 0 1
+
+Total # of neighbors = 11449197
+Ave neighs/atom = 583.994
+Ave special neighs/atom = 2.29645
+Neighbor list builds = 5400
+Dangerous builds = 0
+Total wall time: 0:09:07

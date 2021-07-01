@@ -1,0 +1,13 @@
+gromacs/*atoms*/*confout.gro*
+gromacs/*atoms*/*ener.edr*
+gromacs/*atoms*/*.cpt*
+gromacs/*atoms*/*traj.trr*
+
+lammps/*atoms/benchmark.data*
+lammps/*atoms/lmp-benchmark*
+
+namd/*atoms*/*benchmark*
+!namd/*atoms*/benchmark.in
+namd/*atoms*/*.txt
+namd/*atoms*/*.prm
+namd/*atoms*/nodelist*
