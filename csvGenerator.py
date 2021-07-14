@@ -4,6 +4,12 @@ def main():
     analysisTool = sys.argv[1]
     fileNames = sys.argv[2:]
     
+    acceptableTools = ["gromacs", "namd", "lammps"]
+    if analysisTool not in acceptableTools: 
+        sys.stderr.write("This Analysis Tool is not compatible with this program.\n")
+        sys.exit(-1)
+
+    print("Cores , Time (sec)") #Starting the csv with the header. It is removed later and is more for human readability.
     
     if analysisTool == "gromacs":
         gromacsInterpreter(fileNames)
@@ -13,91 +19,56 @@ def main():
         
     elif analysisTool == "lammps":
         lammpsInterpreter(fileNames)
-        
-    else:
-        sys.stderr.write("This Analysis Tool is not compatible with this program.")
 
 def gromacsInterpreter(fileNames):
-    print("Cores,Time (sec)") #Starting the csv with the header. It is removed later and is more for human readability.
-    
     for fileName in fileNames: #Start of the for-loop. It iterates strings that are directories for files.
-        nameSplit = fileName.split('/') #Splitting the directories up for naming things later.
-        
-        coreFinder = nameSplit[0] #Getting the number of cores via taking the directory name and removing useless data.
-        
-        charIndex = coreFinder.find('atoms') #Finding where to cut off useless data
-        
-        numCores = coreFinder[charIndex+5:] #Initializing numCores as a String and removing most useless data
-        
-        numCores = numCores.replace('C', '') #Removing the redundant C, as it is just there to show it is a core number.
-        
-        readFile = open(fileName, "r") #Opening the file that will have the wallTime that is useful to extract.
-        
-        #This for-loop iterates through lines of a given log file.
-        #It does this to sift through the lines to attempt to find wallTime on each line at the end.
-        for line in (readFile.readlines() [-5:]): #This searches the last 5 lines of the log file to find the wallTime
-            line = line.strip() #These next two lines simply make searching for Time easier.
-            line = line.split()
-            
-            #This for-loop iterates through the line that has time on it, searching for Time.
-            #The reasoning is that the line number the wallTime is on changes from analysis type to analysis type; 
-            #therefore this looks for the line it is on via a linear search of every line, provided by the last for-loop
-            #It breaks out of the inner most for-loop when it finds what it is looking for and moving on.
-            for finder,time in enumerate(line): 
-                if time == "Time:": #Trying to find the line with the Time:
-                    #The Plus 2 below is to find the word or "column" (depending on how you think of it)
-                    wallTime = line[finder+2] #Initializing wallTime as a string, giving it the value of the found number
-                    break
-        
-        print(numCores+","+wallTime) #This prints all of the data every loop into the .csv via the shell script
-        readFile.close() #Closing the files
 
-            
+        wallTimeLine = timeFinder(fileName) #Using the fileName from the for-loop, the timeFinder fuction
+                                        #can get the string where the wallTime can be extracted.
+                                        #Overall, this cuts down on code reusage and makes the code
+                                        #easier to understand.
+        
+        numCores = fileName.split('/')[-2] #Splitting the directories up for naming things later.
+                                           #The negative index is due to better consistency with file structure.
+                                           #Getting the number of cores via taking the directory name and removing useless data.
+
+        if wallTimeLine != None: #This checks if the previous function failed extracting one data point.
+                                 #If it did fail to extract, this is fine. A singular missing data point
+                                 #does not make the csv and eventual graph bad.
+
+            wallTime = wallTimeLine.split()[2] #This changes with each function, but it is skipping to the
+                                                   #"column" or index that has the wallTime number.
+                                                   #This is yet another example of reducing code.
+            print(numCores, ',' ,wallTime)
+
+
 def namdInterpreter(fileNames):
-    print("Cores,Time (sec)")
-    
     for fileName in fileNames:
-        nameSplit = fileName.split('/')
-        coreFinder = nameSplit[0]
-        charIndex = coreFinder.find('atoms')
-        numCores = coreFinder[charIndex+5:]
-        numCores = numCores.replace('C', '')
-        readFile = open(fileName, "r")
-        for line in (readFile.readlines() [-2:]):
-            line = line.strip()
-            line = line.split()
-            for finder,time in enumerate(line):
-                if time == "CPUTime:":
-                    wallTime = line[finder+1]
-                    break
-        print(numCores+","+wallTime)
-        readFile.close()
+        wallTimeLine = timeFinder(fileName)
+        numCores = fileName.split('/')[-2]
 
+        if wallTimeLine != None:
+            wallTime = wallTimeLine.split(' ')[4]            
+            print(numCores, ',' ,wallTime)
 
 def lammpsInterpreter(fileNames):
-    print("Cores,Time (sec)")
-    
     for fileName in fileNames:
-        nameSplit = fileName.split('/')
-        coreFinder = nameSplit[0]
-        charIndex = coreFinder.find('atoms')
-        numCores = coreFinder[charIndex+5:]
-        numCores = numCores.replace('C', '')
-        readFile = open(fileName, "r")
-        for line in (readFile.readlines() [-2:]):
-            line = line.strip()
-            line = line.split()
-            for finder,time in enumerate(line):
-                if time == "time:":
-                    wallTime = line[finder+1]
-                    break
-                    
-        splitTime = wallTime.split(':') #LAMMPS, annoyingly, does its time in hh:mm:ss, so it is split up.
-        calcTime = int(splitTime[0])*60**2 + int(splitTime[1])*60 + int(splitTime[2]) #This converts those numbers into seconds.
-        wallTime = str(calcTime) #Making the seconds back into a string.
-        print(numCores+","+wallTime)
-        readFile.close()
-    
-    
+        wallTimeLine = timeFinder(fileName)
+        numCores = fileName.split('/')[-2]
+
+        if wallTimeLine != None:
+            splitTime = wallTimeLine.split(':') #LAMMPS, annoyingly, does its time in hh:mm:ss.
+                                                #Therefore, it is split up in order to be processed
+            calcTime = int(splitTime[1])*60**2 + int(splitTime[2])*60 + int(splitTime[3]) #This converts those numbers into seconds.
+            print(numCores, ',' ,calcTime)
+
+def timeFinder(fileName):
+    with open(fileName, "r") as f: #This opens the file sent here for this function
+        for line in (f.readlines() [-5:]): #This scans 5 lines backwards through the output file of the Tools
+            line = line.strip() #This line is honestly not needed. It is for better human readability during debugging.
+            if "ime:" in line: #Finding any instance that could lead to "time"
+                return line #Returning that line that has "time" in it.
+    return None #This is a failure state, but it allows the code to run regardless.
+
 if __name__ == "__main__":
     main()

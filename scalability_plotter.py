@@ -1,106 +1,31 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[34]:
-
-
 import math
 import collections
 
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+import re
 
     #Naming Scheme of csvs: [FileDescriptor]_[ANALYSISTOOL]_Data.csv
     #If you want everyting, do *Data.csv or
     #If you just want everything done under one File Descriptor,
-    #do 3M*Data.csv
+    #do 3000k*Data.csv
     #Data.csv is to avoid getting random csvs mixed in. 
 
 def main():
-    style_list='osv^<>8phHD'
- 
-    plt.figure(figsize=[12,9])
-    plt.figure(1)
-    
-    fileNames = sorted(glob.glob('*Data.csv'))
-    
-    #analysisTool = "" Not needed in this current iteration.
-    i = 0
-    for file in fileNames:
-        i += 1
-        nameSplit = file.split('_')
-        name = '{1} ({0} atoms)'.format(nameSplit[0],nameSplit[1])
-        #analysisTool = nameSplit[1] We would need something like this, preferably in each for-loop,
-        #if we wanted to begin trying to seperate the graphs.
-        #This would also need something to seperate the graphs in pyplot, too.
-        #In the current state, it would still put everything into into one graph each.
-        print(name)
-        #fname is the name of the file.
-        #I declare commas (,) as the delimiter (as is normal for a csv file)
-        #Finally, I skip the header by including "skiprows=1"
-        data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
-        speedUp(data, name, style=style_list[i]) #Going into the processing function with data
-        
-    ax = plt.gca()
-    
-    ax.set_xlabel('Number of Cores')
-    ax.set_xscale('log',base=10)
-    
-    ax.set_ylabel('Speed Up Factor')
-    ax.set_yscale('log',base=10)
-    
-    plt.legend()
-    plt.savefig(fname="speedUp.pdf")
-    
-    plt.figure(figsize=[12,9])
-    plt.figure(2)
-    
-    fileNames = sorted(glob.glob('20k*Data.csv')) 
-    
-    i = 0 
-    for file in fileNames:
-        i += 1
-        nameSplit = file.split('_')
-        name = '{1} ({0} atoms)'.format(nameSplit[0],nameSplit[1])
-        data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
-        wallTime(data, name, style=style_list[i])
+    modelsToDo = ["20k","61k","465k","1400k","3000k"]
+    toolsToDo = ["GROMACS","LAMMPS","NAMD"]
+    counter = 0
 
-    ax = plt.gca()
+    for model in modelsToDo:
+        figureCreator(model)
     
-    ax.set_xlabel('Number of Cores')
-    ax.set_xscale('log',base=10)
-    
-    ax.set_ylabel('Walltime of Job')
-    ax.set_yscale('log',base=10)
-    
-    plt.legend() 
-    plt.savefig(fname="20k_walltime.pdf") 
-    
-    plt.figure(figsize=[12,9])
-    plt.figure(3)
+    for tool in toolsToDo:
+        figureCreator(tool)
 
-    fileNames = sorted(glob.glob('3M*Data.csv'))       
-    
-    i = 0
-    for file in fileNames:
-        i += 1
-        nameSplit = file.split('_')
-        name = '{0} ({1} atoms)'.format(nameSplit[0],nameSplit[1])
-        data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
-        wallTime(data, name, style=style_list[i])
-
-    ax = plt.gca()
-    
-    ax.set_xlabel('Number of Cores')
-    ax.set_xscale('log',base=10)
-    
-    ax.set_ylabel('Walltime of Job')
-    ax.set_yscale('log',base=10)
-    
-    plt.legend()
-    plt.savefig(fname="3M_walltime.pdf")
-    
 def speedUp(data, name, style):  
     numCores = data[:,0]
     wallTime = data[:,1] 
@@ -119,7 +44,96 @@ def wallTime(data, name, style):
     #Creates number of rows and columns in order to iterate through the for loop.
     #Perhaps an iterator would be better.
     plt.loglog(numCores,wallTime,style,label=name)
-    
+
+def figureCreator(wildcard):
+    styleList = {
+        0 : "o",
+        1 : "^",
+        2 : "s",
+        3 : "p",
+        4 : "*"
+    }
+    counter = 0
+
+    plt.figure()
+    plt.tight_layout()
+
+    ax = plt.gca()
+
+    if 'k' in wildcard:
+        fileNames = glob.glob(wildcard+'*.csv')
+        sort_nicely(fileNames)
+
+        plt.title("Walltime for {0} Atoms".format(wildcard))
+
+        fileNames
+
+        for file in fileNames:
+            (_,solver,_) = file.split('_',2)
+            name = '{0} ({1} atoms)'.format(solver,wildcard)
+            print(name)
+            data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
+            data = data[np.argsort(data[:,0])]
+            wallTime(data, "{0}".format(solver),
+                     style='{0}-'.format(styleList[counter]))
+            counter+=1
+
+        savedName = (wildcard+"wallTime.png")
+
+        ax.set_ylabel('Walltime of Job (s)')
+        ax.set_yscale('log',base=10)
+
+    else:
+        fileNames = sorted(glob.glob('*'+wildcard+'*.csv'))
+        
+        sort_nicely(fileNames)
+
+        plt.title("Speedup for {0}".format(wildcard))
+
+        for file in fileNames:
+            (atoms,_,_) = file.split('_',2)
+            atoms = atoms.split('-')[0]
+            name = '{0} ({1} atoms)'.format(wildcard,atoms)
+            print(name)
+            data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
+            data = data[np.argsort(data[:,0])]
+            speedUp(data, '{0} Atoms'.format(atoms),
+                     style='{0}-'.format(styleList[counter]))
+            counter+=1
+
+        savedName = (wildcard+"Speedup.png")
+
+        ax.set_ylabel('Speedup of Job')
+        ax.set_yscale('log',base=10)
+
+
+    ax.set_xlabel('Number of Cores')
+    ax.set_xscale('log',base=10)
+
+    plt.grid(which='both')
+
+    plt.legend()
+
+    plt.savefig(fname=savedName)
+            
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
+
+
 #Standard Python stuff; checks if the program is in main or not.
 if __name__ == "__main__":
     main()
