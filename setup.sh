@@ -7,12 +7,22 @@ for analysis in gromacs lammps namd; do
 	#simply not wanting to install new folders.
 	#It will still attempt to create the new files and links.
 	if [ -s ${analysis} ]; then
-		echo "File exists. Attempting to create directories."
+	        echo "File exists. Attempting to create directories."
 	else
 		wget https://www.hecbiosim.ac.uk/benchmark-files/${analysis}.tar.gz
 		tar -xzf ${analysis}.tar.gz
 		rm ${analysis}.tar.gz
 	fi
+	
+	#This is a check to make sure that the folders correctly installed
+	#If they did not generate, the script exits to prevent other problems.
+	if [ -s ${analysis} ]; then
+	        echo "Folder created successfully."
+	else
+	        >&2 echo "Error in folder creation. Check Internet connection and ensure that tar and wget are installed properly and are available."
+		exit -1
+	fi
+
 	#Looks through each of the newly generated atoms folders
 	for atoms in ${analysis}/*-atoms; do
 		for cores in 1 2 4 8 14 28 56 112 224 448 896; do
@@ -29,7 +39,8 @@ for analysis in gromacs lammps namd; do
 			else
 				#This should hopefully never happen.
 				#If it does, post an issue to the github.
-				>&2 echo "It appears that something has gone wrong." 
+				>&2 echo "It appears that something has gone wrong in the attempts at creating the symbolic links and/or directories."
+				exit -2
 			fi	
 		done
 	done
