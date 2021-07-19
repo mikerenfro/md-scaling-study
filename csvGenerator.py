@@ -1,17 +1,21 @@
 import sys
 
 def main():
-    analysisTool = sys.argv[1]
-    fileNames = sys.argv[2:]
+    analysisTool = sys.argv[1] #The first argument which will be the tool
+    fileNames = sys.argv[2:] #All of the other files within model size expansion; 
+                             #In other words, 20k -> 1 -> data.out, 20k -> 2 -> data.out, 20k -> 4 -> data.out...
     
     acceptableTools = ["gromacs", "namd", "lammps"]
-    if analysisTool not in acceptableTools: 
+    if analysisTool not in acceptableTools: #This is an error catcher to prevent someone from
+                                            #running the script with tools that aren't able to be prcessed.
         sys.stderr.write("This Analysis Tool is not compatible with this program.\n")
         sys.exit(-1)
 
     print("Cores , Time (sec)") #Starting the csv with the header. It is removed later and is more for human readability.
     
-    if analysisTool == "gromacs":
+    #The main reason these have to be different is because each of them have different ways of holding onto Time
+    #LAMMPS being the most different. NAMD and GROMACS are very similar.
+    if analysisTool == "gromacs": #Figures out what interpreter to use based on analysis tool
         gromacsInterpreter(fileNames)
     
     elif analysisTool == "namd":

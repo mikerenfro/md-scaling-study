@@ -1,6 +1,6 @@
 # Scaling Study
 
-A batch of python and shell scripts which together create graphs by using data from only **20k and 3000k atom data sets from gromacs, lammps, and namd** programs.
+A batch of python and shell scripts which together create graphs by using any model size data from only **GROMACS, LAMMPS, and NAMD** programs.
 
 ## Usage
 
@@ -70,14 +70,23 @@ There are a variety of reasons the job script can fail:
 ###### Graphs With Distorted or Missing Data
 
 The only documented issue of this happening, if everything else has gone correctly, is due to missing data entries.
-The code will default to -1 for walltime if there is nothing there. Due to the way the graphs are built, this will cause the data point to not appear.
+The code will default to setting the value to None, which removes the data point from the graph. 
+The graph will maintain its general style, but the missing data point will be a blank spot between others or at either ends.
 
 If the job that is missing a data point did complete, then perhaps the python script is not looking far enough into the data file:
 1. Enter into the csvGenerator.py script
-2. Use a search of any kind to find the "readFile.readlines()" line.
-3. There will be a negative number within square brackets; make that number larger and that might fix the problem.
+2. Either search or go to the timeFinder function itself and try to find "f.readlines() [-5:]" (line 67).
+3. There will be a negative number within square brackets; make that number larger (as in -5 to -10) and that might fix the problem.
    - For reference, that number determines how many lines at the end of the file it searches for the time.
 
+###### Outputting Undesired Data Format for Graphs
+
+This potential issue is a relatively easy fix, although it does involve modifying the Python code, should this be needed:
+1. Enter into the scalability_plotter.py script
+2. Use a search of any kind to find **BOTH** "savedName" variables (line 94 and 117).
+3. The saved names will have "descriptor.type"; change the "type" to pdf, png, jpg, or the file type it needs.
+   - Example: "savedName = (wildcard+"wallTime.png")" into "savedName = (wildcard+"wallTime.pdf")"
+   - Be aware that there is a possibility that the function that creates the graphs will not be able to create the exact desired file format. There is little that can be done about this. 
 
 #### Conclusion
 
