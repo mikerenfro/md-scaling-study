@@ -60,7 +60,6 @@ def figureCreator(wildcard):
         3 : "p",
         4 : "*"
     }
-    counter = 0 #The counter that keeps track of which style to use
 
     plt.figure() #The beginning of the graph figures. Without this, the very first graph would not generate
     plt.tight_layout() #This establishes that ALL graphs must be in the tight layout, reducing margins
@@ -71,55 +70,17 @@ def figureCreator(wildcard):
                         #As in 20k has 20'k', and so on with others
                         #All analysis tools are fully capitalized, so even if a new tool is added with a k
                         #The capitalized analysis tool should fail this check
-        fileNames = glob.glob(wildcard+'*.csv') #Grabbing all csvs that have model sizes at the start
-        sort_nicely(fileNames) #Sorting the file names using a function taken from github
-
-        plt.title("Walltime for {0} Atoms".format(wildcard)) #Creating a title for the model size
-
-        for file in fileNames: #Looping through a file of a particular model size and gathering times
-            (_,solver,_) = file.split('_',2) #Grabbing the name of the analysis tool 
-            name = '{0} ({1} atoms)'.format(solver,wildcard) #This is for debugging, for the most part.
-                                                             #It tells both future maintainers and the user that
-                                                             #a certain part is processing. It can be removed if
-                                                             #it is decided that it is not needed.
-            print(name)
-            data = np.loadtxt(fname=file,delimiter=',',skiprows=1) #This is loading the text from the selected file
-            data = data[np.argsort(data[:,0])] #TODO: This is... probably redundant? As the coder, I want to say this line is unneeded.
-                                               #I am leaving it here only because I do not want to break it.
-                                               #This is, at best, a note to my future self to try to remove it and this comment.
-            wallTime(data, "{0}".format(solver),
-                     style='{0}-'.format(styleList[counter])) #TODO: This calls the wallTime function with data, which is a singular file
-                                                              #with a redundant usage of format that SHOULD be removed
-            counter+=1 #Adding one to the style counter which changed to the next style
-
+        
+        createWallTime(wildcard, styleList) #Moving into the function, which should provide easier readability.
         savedName = (wildcard+"wallTime.png") #This is a variable which is specific to this if statement that correctly names the save file.
-                                             
         ax.set_ylabel('Walltime of Job (s)') #This is to properly label the y axis with Walltime oriented names.
         ax.set_yscale('log',base=10) #Setting this log to be base 10
 
     else:
-        fileNames = sorted(glob.glob('*'+wildcard+'*.csv'))
-        
-        sort_nicely(fileNames)
-
-        plt.title("Speedup for {0}".format(wildcard))
-
-        for file in fileNames:
-            (atoms,_,_) = file.split('_',2) #Splitting the name of the file like above
-            atoms = atoms.split('-')[0] #Splitting the 20k from the -atoms it is connected to
-            name = '{0} ({1} atoms)'.format(wildcard,atoms)
-            print(name)
-            data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
-            data = data[np.argsort(data[:,0])] #TODO: Figure out if this can be removed
-            speedUp(data, '{0} Atoms'.format(atoms),
-                     style='{0}-'.format(styleList[counter]))
-            counter+=1
-
-        savedName = (wildcard+"Speedup.png")
-
+        createSpeedUp(wildcard, styleList)
+        savedName = (wildcard+"speedUp.png")
         ax.set_ylabel('Speedup of Job')
         ax.set_yscale('log',base=10)
-
 
     ax.set_xlabel('Number of Cores') #There is always the number of cores for both operations at the bottom
     ax.set_xscale('log',base=10) 
@@ -128,8 +89,49 @@ def figureCreator(wildcard):
                            #In other words, it is showing the 10s and all the numbers in between
 
     plt.legend() #Opening the legend. The labels for the legend were created in the wallTime and speedUp functions, to clarify again.
-
+    
     plt.savefig(fname=savedName) #Saving the file name based on what conditional statement it entered.
+
+def createWallTime(wildcard, styleList):
+
+    fileNames = glob.glob(wildcard+'*.csv') #Grabbing all csvs that have model sizes at the start
+    sort_nicely(fileNames) #Sorting the file names using a function taken from github
+
+    plt.title("Walltime for {0} Atoms".format(wildcard)) #Creating a title for the model size
+    
+    counter = 0 #Iterates through the style List
+    for file in fileNames: #Looping through a file of a particular model size and gathering times
+        (_,solver,_) = file.split('_',2) #Grabbing the name of the analysis tool
+        name = '{0} ({1} atoms)'.format(solver,wildcard) #This is for debugging, for the most part.
+                                                         #It tells both future maintainers and the user that
+                                                         #a certain part is processing. It can be removed if
+                                                         #it is decided that it is not needed.
+        print(name)
+        data = np.loadtxt(fname=file,delimiter=',',skiprows=1) #This is loading the text from the selected file
+        data = data[np.argsort(data[:,0])] #A required additional sort that manages datapoints on the graphs, making them ordered
+        wallTime(data, solver,
+                 style='{0}-'.format(styleList[counter])) #TODO: This calls the wallTime function with data, which is a singular file
+                                                          #with a redundant usage of format that SHOULD be removed
+        counter+=1 #Adding one to the style counter which changed to the next style
+
+def createSpeedUp(wildcard, styleList):
+    fileNames = sorted(glob.glob('*'+wildcard+'*.csv'))
+
+    sort_nicely(fileNames)
+
+    plt.title("Speedup for {0}".format(wildcard))
+    
+    counter = 0
+    for file in fileNames:
+        (atoms,_,_) = file.split('_',2) #Splitting the name of the file like above
+        atoms = atoms.split('-')[0] #Splitting the 20k from the -atoms it is connected to
+        name = '{0} ({1} atoms)'.format(wildcard,atoms)
+        print(name)
+        data = np.loadtxt(fname=file,delimiter=',',skiprows=1)
+        data = data[np.argsort(data[:,0])]
+        speedUp(data, '{0} Atoms'.format(atoms),
+                style='{0}-'.format(styleList[counter]))
+        counter+=1
 
 ###This is code was not produced by Tennessee Tech.            
 ###Sourced from: https://stackoverflow.com/questions/4623446/how-do-you-sort-files-numerically/4623518#4623518
