@@ -13,5 +13,5 @@ cd gromacs #Enters the gromacs directory to limit scope and make code easier.
 #FOR DEBUGGING: Put a pound sign before the greater than symbol in order to 
 #output to the screen what the csvGenerator would put onto the screen.
 for file in *-atoms; do
-	python ../csvGenerator.py gromacs ${file}/*/bench*.log > ../${file}_GROMACS_Data.csv
+	python ../csvgenerator.py gromacs ${file}/*/bench*.log > ../${file}_GROMACS_Data.csv
 done

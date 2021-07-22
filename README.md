@@ -46,12 +46,12 @@ To run the Python script, load the module "anaconda".
 
 ```
 module load anaconda
-python scalability_plotter.py
+python scalabilityplotter.py
 ```
 
 With the csv files in the correct place, the python script should be able to be run.  
-After running the Python script, .pdf files should appear that have graphs representing the speedup of the various analysis tools. 
-The realtime/walltime spent processing for the various atom sizes will also be present and compared by analysis tool. 
+After running the Python script, .png (or, if you changed it, some other desired file type) files should appear that have graphs representing the speedup of the various analysis tools. 
+The real/wall time spent processing for the various atom sizes will also be present and compared by analysis tool. 
 
 #### Common Issues and the Fixes
 
@@ -74,18 +74,18 @@ The code will default to setting the value to None, which removes the data point
 The graph will maintain its general style, but the missing data point will be a blank spot between others or at either ends.
 
 If the job that is missing a data point did complete, then perhaps the python script is not looking far enough into the data file:
-1. Enter into the csvGenerator.py script
-2. Either search or go to the timeFinder function itself and try to find "f.readlines() [-5:]" (line 67).
+1. Enter into the csvgenerator.py script
+2. Either search or go to the time_finder function itself and try to find "f.readlines() [-5:]" (line 67).
 3. There will be a negative number within square brackets; make that number larger (as in -5 to -10) and that might fix the problem.
    - For reference, that number determines how many lines at the end of the file it searches for the time.
 
 ###### Outputting Undesired Data Format for Graphs
 
 This potential issue is a relatively easy fix, although it does involve modifying the Python code, should this be needed:
-1. Enter into the scalability_plotter.py script
-2. Use a search of any kind to find **BOTH** "savedName" variables (line 94 and 117).
-3. The saved names will have "descriptor.type"; change the "type" to pdf, png, jpg, or the file type it needs.
-   - Example: "savedName = (wildcard+"wallTime.png")" into "savedName = (wildcard+"wallTime.pdf")"
+1. Enter into the scalabilityplotter.py script
+2. Use a search of any kind to find **BOTH** "saved_name" variables (line 94 and 117).
+3. The saved_name will have "descriptor.type"; change the "type" to pdf, png, jpg, or the file type it needs.
+   - Example: "saved_name = (wildcard+"wall_time.png")" into "saved_name = (wildcard+"wall_time.pdf")"
    - Be aware that there is a possibility that the function that creates the graphs will not be able to create the exact desired file format. There is little that can be done about this. 
 
 #### Conclusion

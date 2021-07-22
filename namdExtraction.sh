@@ -10,5 +10,5 @@ cd namd #Enters the namd directory to limit scope and make code easier.
 #FOR DEBUGGING: Put a pound sign before the greater than symbol in order to
 #output to the screen what the csvGenerator would put onto the screen.
 for file in *-atoms; do
-	python ../csvGenerator.py namd ${file}/*/bench.out > ../${file}_NAMD_Data.csv
+	python ../csvgenerator.py namd ${file}/*/bench.out > ../${file}_NAMD_Data.csv
 done
