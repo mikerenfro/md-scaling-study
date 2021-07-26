@@ -21,7 +21,7 @@ def main():
 
     # Starting the csv with the header.
     # It is removed later and is more for human readability.
-    print("Cores , Time (sec)")
+    print("Cores,Time (sec)")
 
     # The main reason these have to be different is because
     # each of them have different ways of holding onto Time
@@ -69,7 +69,7 @@ def gromacs_interpreter(file_names):
             wall_time = wall_time_line.split()[2]
             # Again, all printed output is normally
             # directly redirects into a csv
-            print(num_cores, ',', wall_time)
+            print(num_cores + ',' + wall_time)
 
 
 def namd_interpreter(file_names):
@@ -79,7 +79,7 @@ def namd_interpreter(file_names):
 
         if wall_time_line is not None:
             wall_time = wall_time_line.split(' ')[4]
-            print(num_cores, ',', wall_time)
+            print(num_cores + ',' + wall_time)
 
 
 def lammps_interpreter(file_names):
@@ -90,10 +90,10 @@ def lammps_interpreter(file_names):
         if wall_time_line is not None:
             # LAMMPS, annoyingly, does its time in hh:mm:ss.
             # Therefore, it is split up in order to be processed
-            [hours, minutes, seconds] = wall_time_line.split(':')
+            [_, hours, minutes, seconds] = wall_time_line.split(':')
             # This converts those numbers into seconds.
             calc_time = int(hours)*60**2 + int(minutes)*60 + int(seconds)
-            print(num_cores, ',', calc_time)
+            print(num_cores + ',' + str(calc_time))
 
 
 def time_finder(file):
