@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import glob
 import re
 
+import warnings
+warnings.filterwarnings("error")
+
 # Naming Scheme of csvs: [FileDescriptor]_[ANALYSISTOOL]_Data.csv
 # If you want everyting, do *Data.csv or
 # If you just want everything done under one File Descriptor,
@@ -88,21 +91,29 @@ def figure_creator(wildcard):
     if 'k' in wildcard:
         # Moving into the function,
         # which should provide easier readability.
-        create_wall_time_figure(wildcard, style_list)
-        # This is a variable which is specific to this
-        # if statement that correctly names the save file.
-        saved_name = (wildcard+"walltime.png")
-        # This is to properly label the y axis
-        # with wall time oriented names.
-        ax.set_ylabel('Walltime of Job (s)')
-        # Setting this log to be base 10
-        ax.set_yscale('log', base=10)
+        # The if expression is to catch failed glob attempts.
+        success_check = (create_wall_time_figure(wildcard, style_list))
+        if success_check is False:
+            return
+        # The else is to resolve when it was successful 
+        else:
+            # This is a variable which is specific to this
+            # if statement that correctly names the save file.
+            saved_name = (wildcard+"walltime.png")
+            # This is to properly label the y axis
+            # with wall time oriented names.
+            ax.set_ylabel('Walltime of Job (s)')
+            # Setting this log to be base 10
+            ax.set_yscale('log', base=10)
 
     else:
-        create_speedup_figure(wildcard, style_list)
-        saved_name = (wildcard+"speedup.png")
-        ax.set_ylabel('Speedup of Job')
-        ax.set_yscale('log', base=10)
+        success_check = (create_speedup_figure(wildcard, style_list))
+        if success_check is False:
+            return            
+        else:
+            saved_name = (wildcard+"speedup.png")
+            ax.set_ylabel('Speedup of Job')
+            ax.set_yscale('log', base=10)
 
     # There is always the number of cores
     # for both operations at the bottom
@@ -127,12 +138,21 @@ def figure_creator(wildcard):
 def create_wall_time_figure(wildcard, style_list):
     # Grabbing all csvs that have model sizes at the start
     file_names = glob.glob(wildcard+'*.csv')
+
+    # Checking if the glob was able to find anything and create the list.
+    if not file_names:
+        print("ERROR:\nIt appears that there are no", wildcard, "csv files.")
+        print("If this is unexpected, try running the Extraction scripts.")
+        print("Otherwise, refer to the README.md for help.")
+        return False
+
     # Sorting the file names using a function taken from github
     sort_nicely(file_names)
 
     # Creating a title for the model size
     plt.title("Walltime for {0} Atoms".format(wildcard))
 
+    success = False # Attempts to keep bad data from creating empty graphs
     counter = 0  # Iterates through the style_list
     # Looping through a file of a particular model size and gathering times
     for file in file_names:
@@ -144,19 +164,56 @@ def create_wall_time_figure(wildcard, style_list):
         # a certain part is processing. It can be removed if
         # it is decided that it is not needed.
         print(name)
-        # This is loading the text from the selected file
-        data = np.loadtxt(fname=file, delimiter=',', skiprows=1)
+        # Attempting to stop a single bad csv from killing the program.
+        try:
+            # This is loading the text from the selected file
+            data = np.loadtxt(fname=file, delimiter=',', skiprows=1)
+        except ValueError:
+            # This error is to catch bad data,
+            # like a string or other problematic type.
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv has bad (or otherwise unreadable) data.")
+            continue
+        except StopIteration:
+            # This is to catch empty csv files.
+            # StopIteration is an entirely empty csv (uncommon)
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv is empty.")
+            continue
+        except IndexError:
+            # IndexError is when there is a header but nothing else (more common)
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv is empty.")
+            continue
+        except UserWarning:
+            # There seems to be a final edge case that somehow
+            # does not cause errors until here. This is to catch that.
+            # This error should be caught by IndexError, but
+            # This does not happen for some reason.
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears that no data successfully loaded.")
+            continue
         # A required additional sort that manages
         # datapoints on the graphs,
         # making them ordered
+        success = True
         data = data[np.argsort(data[:, 0])]
         wall_time_calc(data, solver,
                  style='{0}-'.format(style_list[counter]))
         counter += 1  # incrementing the counter for style_list
+    return success
 
 
 def create_speedup_figure(wildcard, style_list):
     file_names = sorted(glob.glob('*'+wildcard+'*.csv'))
+
+    # It should never be able to reach here if this is the case,
+    # but it is conceptually possible.
+    if not file_names:
+        print("ERROR:\nIt appears that there are no", wildcard, "csv files.")
+        print("If this is unexpected, try running the Extraction scripts.")
+        print("Otherwise, refer to the README.md for help.")
+        return False
 
     sort_nicely(file_names)
 
@@ -164,18 +221,45 @@ def create_speedup_figure(wildcard, style_list):
 
     counter = 0
     for file in file_names:
-        # Splitting the name of the file like above
+        # Splitting the name of the file like above, but
         (atoms, _, _) = file.split('_', 2)
-        # Splitting the 20k from the -atoms it is connected to
+        # splitting the 20k from the -atoms it is connected to.
         atoms = atoms.split('-')[0]
         name = '{0} ({1} atoms)'.format(wildcard, atoms)
         print(name)
-        data = np.loadtxt(fname=file, delimiter=',', skiprows=1)
+        try:
+            # This is loading the text from the selected file
+            data = np.loadtxt(fname=file, delimiter=',', skiprows=1)
+        except ValueError:
+            # This error is to catch bad data,
+            # like a string or other problematic type.
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv has bad (or otherwise unreadable) data.")
+            continue
+        except StopIteration:
+            # This is to catch empty csv files.
+            # StopIteration is an entirely empty csv (uncommon)
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv is empty.")
+            continue
+        except IndexError:
+            # IndexError is when there is a header but nothing else (more common)
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears the csv is empty.")
+            continue
+        except UserWarning:
+            # There seems to be a final edge case that somehow
+            # does not cause errors until here. This is to catch that.
+            # This error should be caught by IndexError, but
+            # This does not happen for some reason.
+            print("ERROR:\n" + file, "cannot be loaded.")
+            print("It appears that no data successfully loaded.")
+            continue
         data = data[np.argsort(data[:, 0])]
         speedup_calc(data, '{0} Atoms'.format(atoms),
                 style='{0}-'.format(style_list[counter]))
         counter += 1
-
+    return True
 
 # This is code was not produced by Tennessee Tech.
 # Sourced from: https://stackoverflow.com/questions/4623446/how-do-you-sort-files-numerically/4623518#4623518

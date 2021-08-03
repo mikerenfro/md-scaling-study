@@ -1,6 +1,16 @@
 #!/bin/bash
 
-cd lammps #Enters the lammps directory to limit scope and make code easier.
+if [ -s lammps/ ]; then
+        #Enters the lammps directory to limit scope and make code easier.
+        cd lammps/
+else
+        >&2 echo "ERROR:"
+        >&2 echo "It appears the lammps folder does not exist or is empty."
+        >&2 echo "SUGGESTIONS:"
+        >&2 echo "Have you run the setup.sh yet?"
+        >&2 echo "Is this script where it was when this project was cloned?"
+        exit -1
+fi
 
 #This scans each atoms folder within the lammps folder.
 #It sends the file it selects with the for-loop into
