@@ -62,15 +62,9 @@ def wall_time_calc(data, name, style):
 
 
 def figure_creator(wildcard):
-    # TODO: Make this have more options:
-    # Should more model sizes be added, this will not work.
-    style_list = {  # The list for styles to be used for the graph creation
-        0: "o",
-        1: "^",
-        2: "s",
-        3: "p",
-        4: "*"
-    }
+    # Makes two style lists to reference against when making plots
+    marker = ["o","^","s","p","*"]
+    line_style = ["-",":","--"]
 
     # The beginning of the graph figures.
     # Without this, the very first graph would not generate
@@ -199,7 +193,7 @@ def create_wall_time_figure(wildcard, style_list):
         success = True
         data = data[np.argsort(data[:, 0])]
         wall_time_calc(data, solver,
-                 style='{0}-'.format(style_list[counter]))
+                       sstyle=marker[counter]+line_style[counter%3]))
         counter += 1  # incrementing the counter for style_list
     return success
 
