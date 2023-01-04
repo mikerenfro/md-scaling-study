@@ -17,6 +17,8 @@ fi
 #the csvGenerator python script.
 #The Python script outputs the data into a csv file.
 
+. /opt/ohpc/pub/spack/staging-v0.19/share/spack/setup-env.sh
+spack load anaconda3
 #FOR DEBUGGING: Put a pound sign before the greater than symbol in order to
 #output to the screen what the csvGenerator would put onto the screen.
 for file in *-atoms; do
