@@ -25,7 +25,7 @@ for analysis in gromacs lammps namd; do
 
 	#Looks through each of the newly generated atoms folders
 	for atoms in ${analysis}/*-atoms; do
-		for cores in 1 2 4 8 14 28 56 112 224 448 896; do
+		for cores in 1 2 4 8 16 32 64 $(seq 96 96 960); do
 			#Creating the directories for organization
 			#And to make code easier.
 			mkdir -p ${atoms}/${cores}/
