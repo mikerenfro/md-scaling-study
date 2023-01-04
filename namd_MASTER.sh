@@ -28,20 +28,19 @@ for file in *-atoms/; do #Going into all of the atom sizes
 		--ntasks-per-node=${cores} --time=132:00:00 --mem=16G \
 		../../../namd.sh)
 	done
-	for cores in 8 14 28; do
+	for cores in 8 16 32 64 96; do
 		(cd ${file}/${cores}; sbatch --nodes=1 \
                 --ntasks-per-node=${cores} --time=14:00:00 \
                 ../../../namd.sh)
 	done
-	for cores in 56 112 224; do
-		(cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
-		sbatch --nodes=${nodes} --ntasks-per-node=28 --time=02:30:00 \
+	for nodes in $(seq 2 6); do
+		(cd ${file}/$(expr $nodes '*' 96); \
+		sbatch --nodes=${nodes} --ntasks-per-node=96 --time=02:30:00 \
 		../../../namd.sh)
 	done
-
-	for cores in 448 896; do
-		(cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
-		sbatch --nodes=${nodes} --ntasks-per-node=28 --time=00:30:00 \
+	for nodes in $(seq 7 10); do
+		(cd ${file}/$(expr $nodes '*' 96); \
+		sbatch --nodes=${nodes} --ntasks-per-node=96 --time=00:30:00 \
 		../../../namd.sh)
 	done
 done
