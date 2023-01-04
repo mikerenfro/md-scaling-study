@@ -86,7 +86,7 @@ def figure_creator(wildcard):
         # Moving into the function,
         # which should provide easier readability.
         # The if expression is to catch failed glob attempts.
-        success_check = (create_wall_time_figure(wildcard, style_list))
+        success_check = (create_wall_time_figure(wildcard, marker, line_style))
         if success_check is False:
             return
         # The else is to resolve when it was successful 
@@ -101,7 +101,7 @@ def figure_creator(wildcard):
             ax.set_yscale('log', base=10)
 
     else:
-        success_check = (create_speedup_figure(wildcard, style_list))
+        success_check = (create_speedup_figure(wildcard, marker, line_style))
         if success_check is False:
             return            
         else:
@@ -129,7 +129,7 @@ def figure_creator(wildcard):
     plt.savefig(fname=saved_name)
 
 
-def create_wall_time_figure(wildcard, style_list):
+def create_wall_time_figure(wildcard, marker, line_style):
     # Grabbing all csvs that have model sizes at the start
     file_names = glob.glob(wildcard+'*.csv')
 
@@ -193,12 +193,12 @@ def create_wall_time_figure(wildcard, style_list):
         success = True
         data = data[np.argsort(data[:, 0])]
         wall_time_calc(data, solver,
-                       sstyle=marker[counter]+line_style[counter%3]))
+                       style=marker[counter]+line_style[counter%3])
         counter += 1  # incrementing the counter for style_list
     return success
 
 
-def create_speedup_figure(wildcard, style_list):
+def create_speedup_figure(wildcard, marker, line_style):
     file_names = sorted(glob.glob('*'+wildcard+'*.csv'))
 
     # It should never be able to reach here if this is the case,
@@ -251,7 +251,7 @@ def create_speedup_figure(wildcard, style_list):
             continue
         data = data[np.argsort(data[:, 0])]
         speedup_calc(data, '{0} Atoms'.format(atoms),
-                style='{0}-'.format(style_list[counter]))
+               style=marker[counter]+line_style[counter%3]) 
         counter += 1
     return True
 
