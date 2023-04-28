@@ -40,15 +40,15 @@ for file in *-atoms/; do #Going into all of the atom sizes
 	#set to 7. This was done to optimize speeds and avoids any
 	#issues created by doing "large prime factors"
 	#The expr is figuring out how many nodes it needs to give it.
-	for cores in 56 112 224; do
-                (cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
-                sbatch --nodes=${nodes} --ntasks-per-node=4 --time=01:00:00 \
-                --cpus-per-task=7 ../../../gromacs-mpi.sh)
-        done
+	#for cores in 56 112 224; do
+        #        (cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
+        #        sbatch --nodes=${nodes} --ntasks-per-node=4 --time=01:00:00 \
+        #        --cpus-per-task=7 ../../../gromacs-mpi.sh)
+        #done
 	
-	for cores in 448 896; do
-                (cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
-                sbatch --nodes=${nodes} --ntasks-per-node=4 --time=00:10:00 \
-                --cpus-per-task=7 ../../../gromacs-mpi.sh)
-        done
+	#for cores in 448 896; do
+        #        (cd ${file}/${cores}; nodes=$(expr ${cores} / 28);\
+        #        sbatch --nodes=${nodes} --ntasks-per-node=4 --time=00:10:00 \
+        #        --cpus-per-task=7 ../../../gromacs-mpi.sh)
+        #done
 done

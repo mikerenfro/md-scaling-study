@@ -6,5 +6,6 @@
 
 INPUT=benchmark.tpr
 OUTPUT=bench.log
-module load gromacs
+module load spack
+module load Core/gromacs
 gmx mdrun -nt ${SLURM_CPUS_PER_TASK} -s ${INPUT} -g ${OUTPUT}
